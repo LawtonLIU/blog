@@ -9,7 +9,9 @@ https://docs.djangoproject.com/en/5.1/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.1/ref/settings/
 """
-
+import os
+import sys
+from django.utils.translation import gettext_lazy as _
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -37,6 +39,19 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.sites',
+    'django.contrib.sitemaps',
+    # app
+    'blog',
+    'accounts',
+    'comments',
+    'oauth',
+    'servermanager',
+    'owntracks',
+    # third party
+    'mdeditor',
+    'compressor',
+
 ]
 
 MIDDLEWARE = [
@@ -54,7 +69,7 @@ ROOT_URLCONF = 'djangoblog.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [os.path.join(BASE_DIR, 'templates')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -62,6 +77,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'blog.context_processors.seo_processor', # 自定义上下文处理器
             ],
         },
     },
@@ -75,8 +91,14 @@ WSGI_APPLICATION = 'djangoblog.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'djangoblog',
+        'USER': 'root',
+        'PASSWORD': '123456',
+        'HOST': '127.0.0.1',
+        'PORT': 3306,
+        'OPTIONS': {
+            'charset': 'utf8mb4'},
     }
 }
 
@@ -103,13 +125,15 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/5.1/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'zh-hans'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Asia/Shanghai'
 
 USE_I18N = True
 
-USE_TZ = True
+USE_TZ = False
+
+USE_L10N = True
 
 
 # Static files (CSS, JavaScript, Images)
@@ -121,3 +145,90 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+#i18n 支持翻译的语言、本地位置
+LANGUAGES = (
+    ('en', _('English')),
+    ('zh-hans', _('Simplified Chinese')),
+    ('zh-hant', _('Traditional Chinese')),
+)
+LOCALE_PATHS = (
+    os.path.join(BASE_DIR, 'locale'),
+)
+
+# 账户校验后端
+AUTHENTICATION_BACKENDS = [
+    'accounts.user_login_backend.EmailOrUsernameModelBackend']
+
+# 静态配置
+STATIC_ROOT = os.path.join(BASE_DIR, 'collectedstatic')
+STATIC_URL = '/static/'
+STATICFILES = os.path.join(BASE_DIR, 'static')
+
+# 自定义模型
+AUTH_USER_MODEL = 'accounts.BlogUser'
+
+# 登录URL
+LOGIN_URL = '/login/'
+
+# BOOTSTRAP颜色定义
+BOOTSTRAP_COLOR_TYPES = [
+    'default', 'primary', 'success', 'info', 'warning', 'danger'
+]
+
+# 时间格式、日期格式
+TIME_FORMAT = '%Y-%m-%d %H:%M:%S'
+DATE_TIME_FORMAT = '%Y-%m-%d'
+
+# cache设置
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'TIMEOUT': 10800,
+        'LOCATION': 'unique-snowflake',# LOCATION 区分不同缓存
+    }
+}
+
+# 分页
+PAGINATE_BY = 10
+
+# 地址ID
+SITE_ID = 1
+
+# 供搜索引擎的相关设置
+BAIDU_NOTIFY_URL='http://data.zz.baidu.com/urls?site=https://www.lylinux.net&token=1uAOGrMsUm5syDGn'
+
+# 邮箱设置 qq
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_USE_TLS = False
+EMAIL_USE_SSL = True
+EMAIL_HOST = 'smtp.qq.com'
+EMAIL_PORT = 465
+EMAIL_HOST_USER = '1792991894@qq.com'
+EMAIL_HOST_PASSWORD = 'idbcouqqypvkddba'
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+SERVER_EMAIL = EMAIL_HOST_USER
+
+# compressor 配置
+STATICFILES_FINDERS = (
+    'django.contrib.staticfiles.finders.FileSystemFinder', # 查找文件系统中的静态文件
+    'django.contrib.staticfiles.finders.AppDirectoriesFinder', # 查找应用程序中的静态文件
+    # other
+    'compressor.finders.CompressorFinder', # 查找压缩文件
+)
+COMPRESS_ENABLED = True
+# COMPRESS_OFFLINE = True
+
+COMPRESS_CSS_FILTERS = [
+    # creates absolute urls from relative ones
+    'compressor.filters.css_default.CssAbsoluteFilter', # css绝对路径
+    # css minimizer
+    'compressor.filters.cssmin.CSSMinFilter' # css压缩
+]
+COMPRESS_JS_FILTERS = [
+    'compressor.filters.jsmin.JSMinFilter' # js压缩
+]
+
+# 媒体配置
+MEDIA_ROOT = os.path.join(BASE_DIR, 'uploads')
+MEDIA_URL = '/media/'
