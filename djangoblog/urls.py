@@ -41,6 +41,7 @@ urlpatterns += i18n_patterns(
     re_path(r'', include('accounts.urls', namespace='account')),
     re_path(r'',include('blog.urls',namespace='blog')),
     re_path(r'',include('comments.urls',namespace='comment')),
+    re_path(r'',include('oauth.urls',namespace='oauth')),
     re_path(r'^sitemap\.xml$', sitemap, {'sitemaps': sitemaps},
             name='django.contrib.sitemaps.views.sitemap'),prefix_default_language=False)\
         + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
